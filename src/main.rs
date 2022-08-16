@@ -89,7 +89,10 @@ fn run_once(board: &mut Board<bool>) {
             if board[x][y] {
                 for dx in -1..=1 {
                     for dy in -1..=1 {
-                        let c = ((x as isize + dx) as usize, (y as isize + dy) as usize);
+                        let c = (
+                            ((x as isize + dx).max(0).min(LINE_SIZE as isize - 1) as usize),
+                            ((y as isize + dy).max(0).min(COLUMN_SIZE as isize - 1) as usize),
+                        );
                         if !updated_board[c.0][c.1] {
                             updated_board[c.0][c.1] = true;
                             match run_cell(&board, c) {
