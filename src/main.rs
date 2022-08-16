@@ -174,7 +174,9 @@ fn _eadk_main() {
                     pointer.0 += 1;
                 }
             }
-            AppState::Running => {}
+            AppState::Running => {
+                run_once(&mut board);
+            }
             AppState::StepByStep => {
                 if keyboard_state.key_down(key::EXE) {
                     run_once(&mut board);
