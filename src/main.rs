@@ -24,7 +24,7 @@ const COLUMN_SIZE: u16 = SCREEN_HEIGHT / CELL_SIZE;
 const BOARD_SIZE: usize = LINE_SIZE as usize * COLUMN_SIZE as usize;
 
 type Board = [[bool; COLUMN_SIZE as usize]; LINE_SIZE as usize];
-type OnBoard = Vec<(u16, u16), BOARD_SIZE>;
+type OnBoard<T> = Vec<(T, T), BOARD_SIZE>;
 
 enum AppState {
     Editor,
@@ -32,7 +32,7 @@ enum AppState {
     StepByStep,
 }
 
-fn draw_board(on_board: &OnBoard) {
+fn draw_board(on_board: &OnBoard<u16>) {
     display::push_rect_uniform(Rect::SCREEN, Color::WHITE);
 
     on_board.iter().for_each(|(x, y)| {
@@ -48,14 +48,26 @@ fn draw_board(on_board: &OnBoard) {
     });
 }
 
-fn run_once(board: &mut Board) {
-    let mut dead: OnBoard = Vec::new();
-    let mut born: OnBoard = Vec::new();
+fn run_cell(board: &Board, cell: (usize, usize)) -> Option<bool> {
+    todo!();
+}
 
-    dead.into_iter()
-        .for_each(|(x, y)| board[x as usize][y as usize] = false);
-    born.into_iter()
-        .for_each(|(x, y)| board[x as usize][y as usize] = true);
+fn run_once(board: &mut Board) {
+    let mut dead: OnBoard<usize> = Vec::new();
+    let mut born: OnBoard<usize> = Vec::new();
+
+    board.iter().enumerate().for_each(|(x, col)| {
+        col.iter()
+            .enumerate()
+            .for_each(|(y, _)| match run_cell(&board, (x, y)) {
+                Some(true) => born.push((x, y)).unwrap(),
+                Some(false) => dead.push((x, y)).unwrap(),
+                _ => {}
+            });
+    });
+
+    dead.into_iter().for_each(|(x, y)| board[x][y] = false);
+    born.into_iter().for_each(|(x, y)| board[x][y] = true);
 }
 
 #[no_mangle]
