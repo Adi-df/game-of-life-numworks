@@ -20,5 +20,11 @@ const CELL_SIZE: u16 = 2;
 const LINE_CELL: u16 = SCREEN_WIDTH / CELL_SIZE;
 const COLUMN_CELL: u16 = SCREEN_HEIGHT / CELL_SIZE;
 
+enum AppState {
+    Editor,
+    Running,
+    StepByStep,
+}
+
 #[no_mangle]
 fn _eadk_main() {}
