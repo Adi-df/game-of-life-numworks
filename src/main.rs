@@ -23,7 +23,7 @@ const LINE_SIZE: u16 = SCREEN_WIDTH / CELL_SIZE;
 const COLUMN_SIZE: u16 = SCREEN_HEIGHT / CELL_SIZE;
 const BOARD_SIZE: usize = LINE_SIZE as usize * COLUMN_SIZE as usize;
 
-type Board = [[bool; COLUMN_SIZE as usize]; LINE_SIZE as usize];
+type Board<T> = [[T; COLUMN_SIZE as usize]; LINE_SIZE as usize];
 type OnBoard<T> = Vec<(T, T), BOARD_SIZE>;
 
 enum AppState {
@@ -48,7 +48,7 @@ fn draw_board(on_board: &OnBoard<u16>) {
     });
 }
 
-fn get_cell(board: &Board, (x, y): (i16, i16)) -> u8 {
+fn get_cell(board: &Board<bool>, (x, y): (i16, i16)) -> u8 {
     if x < 0 || y < 0 || x > LINE_SIZE as i16 - 1 || y > COLUMN_SIZE as i16 - 1 {
         0
     } else {
@@ -56,7 +56,7 @@ fn get_cell(board: &Board, (x, y): (i16, i16)) -> u8 {
     }
 }
 
-fn run_cell(board: &Board, (x, y): (usize, usize)) -> Option<bool> {
+fn run_cell(board: &Board<bool>, (x, y): (usize, usize)) -> Option<bool> {
     let (ix, iy) = (x as i16, y as i16);
 
     let neighbor_count = get_cell(&board, (ix - 1, iy - 1))
@@ -77,9 +77,10 @@ fn run_cell(board: &Board, (x, y): (usize, usize)) -> Option<bool> {
     }
 }
 
-fn run_once(board: &mut Board) {
-    let mut dead: OnBoard<usize> = Vec::new();
+fn run_once(board: &mut Board<bool>) {
+    let mut updated_board: Board<bool> = [[false; COLUMN_SIZE as usize]; LINE_SIZE as usize];
     let mut born: OnBoard<usize> = Vec::new();
+    let mut died: OnBoard<usize> = Vec::new();
 
     board.iter().enumerate().for_each(|(x, col)| {
         col.iter().enumerate().for_each(|(y, _)| {
@@ -87,10 +88,13 @@ fn run_once(board: &mut Board) {
                 for dx in -1..=1 {
                     for dy in -1..=1 {
                         let c = ((x as isize + dx) as usize, (y as isize + dy) as usize);
-                        match run_cell(&board, c) {
-                            Some(true) => born.push(c).unwrap(),
-                            Some(false) => dead.push(c).unwrap(),
-                            _ => {}
+                        if !updated_board[c.0][c.1] {
+                            updated_board[c.0][c.1] = true;
+                            match run_cell(&board, c) {
+                                Some(true) => born.push(c).unwrap(),
+                                Some(false) => died.push(c).unwrap(),
+                                _ => {}
+                            }
                         }
                     }
                 }
@@ -98,8 +102,8 @@ fn run_once(board: &mut Board) {
         });
     });
 
-    dead.into_iter().for_each(|(x, y)| board[x][y] = false);
     born.into_iter().for_each(|(x, y)| board[x][y] = true);
+    died.into_iter().for_each(|(x, y)| board[x][y] = false);
 }
 
 #[no_mangle]
@@ -107,7 +111,7 @@ fn _eadk_main() {
     let mut state: AppState = AppState::Editor;
     let mut pointer: (u16, u16) = (LINE_SIZE / 2, COLUMN_SIZE / 2);
 
-    let mut board: Board = [[false; COLUMN_SIZE as usize]; LINE_SIZE as usize];
+    let mut board: Board<bool> = [[false; COLUMN_SIZE as usize]; LINE_SIZE as usize];
 
     loop {
         let keyboard_state = keyboard::scan();
