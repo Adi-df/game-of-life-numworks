@@ -2,7 +2,9 @@
 #![no_main]
 
 pub mod eadk;
-use eadk::{display, Color, Rect, SCREEN_HEIGHT, SCREEN_WIDTH};
+use eadk::{display, timing, Color, Rect, SCREEN_HEIGHT, SCREEN_WIDTH};
+
+use heapless::Vec;
 
 #[export_name = "eadk_app_name"]
 #[link_section = ".rodata.eadk_app_name"]
@@ -22,6 +24,7 @@ const COLUMN_SIZE: usize = (SCREEN_HEIGHT / CELL_SIZE) as usize;
 const BOARD_SIZE: usize = LINE_SIZE * COLUMN_SIZE;
 
 type Board = [bool; BOARD_SIZE];
+type OnBoard = Vec<(u16, u16), BOARD_SIZE>;
 
 enum AppState {
     Editor,
@@ -29,33 +32,51 @@ enum AppState {
     StepByStep,
 }
 
-fn draw_board(board: &Board) {
-    (0..LINE_SIZE).for_each(|x| {
-        (0..COLUMN_SIZE).for_each(|y| {
-            display::push_rect_uniform(
-                Rect {
-                    x: x as u16 * CELL_SIZE,
-                    y: y as u16 * CELL_SIZE,
-                    width: CELL_SIZE,
-                    height: CELL_SIZE,
-                },
-                if board[(x + y * LINE_SIZE) as usize] {
-                    Color::BLACK
-                } else {
-                    Color::WHITE
-                },
-            )
-        })
+fn draw_board(on_board: &OnBoard) {
+    display::push_rect_uniform(Rect::SCREEN, Color::WHITE);
+
+    on_board.iter().for_each(|(x, y)| {
+        display::push_rect_uniform(
+            Rect {
+                x: *x * CELL_SIZE,
+                y: *y * CELL_SIZE,
+                width: CELL_SIZE,
+                height: CELL_SIZE,
+            },
+            Color::BLACK,
+        )
     });
 }
 
 #[no_mangle]
 fn _eadk_main() {
     let mut state: AppState = AppState::Editor;
+    let mut pointer: (u16, u16) = (LINE_SIZE as u16 / 2, COLUMN_SIZE as u16 / 2);
+
     let mut board: Board = [false; BOARD_SIZE];
+    let mut on_board: OnBoard = Vec::new();
 
     loop {
-        draw_board(&board);
+        draw_board(&on_board);
+
+        match state {
+            AppState::Editor => {
+                // Draw the pointer
+                display::push_rect_uniform(
+                    Rect {
+                        x: pointer.0 * CELL_SIZE,
+                        y: pointer.1 * CELL_SIZE,
+                        width: CELL_SIZE,
+                        height: CELL_SIZE,
+                    },
+                    Color::RED,
+                );
+            }
+            AppState::Running => {}
+            AppState::StepByStep => {}
+        }
+
         display::wait_for_vblank();
+        timing::msleep(300);
     }
 }
