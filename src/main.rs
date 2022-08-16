@@ -32,22 +32,6 @@ enum AppState {
     StepByStep,
 }
 
-fn draw_board(on_board: &OnBoard<u16>) {
-    display::push_rect_uniform(Rect::SCREEN, Color::WHITE);
-
-    on_board.iter().for_each(|(x, y)| {
-        display::push_rect_uniform(
-            Rect {
-                x: *x * CELL_SIZE,
-                y: *y * CELL_SIZE,
-                width: CELL_SIZE,
-                height: CELL_SIZE,
-            },
-            Color::BLACK,
-        )
-    });
-}
-
 fn get_cell(board: &Board<bool>, (x, y): (i16, i16)) -> u8 {
     if x < 0 || y < 0 || x > LINE_SIZE as i16 - 1 || y > COLUMN_SIZE as i16 - 1 {
         0
@@ -107,12 +91,36 @@ fn run_once(board: &mut Board<bool>) {
         });
     });
 
-    born.into_iter().for_each(|(x, y)| board[x][y] = true);
-    died.into_iter().for_each(|(x, y)| board[x][y] = false);
+    born.into_iter().for_each(|(x, y)| {
+        board[x][y] = true;
+        draw_cell(&board, (x as u16, y as u16));
+    });
+    died.into_iter().for_each(|(x, y)| {
+        board[x][y] = false;
+        draw_cell(&board, (x as u16, y as u16));
+    });
+}
+
+fn draw_cell(board: &Board<bool>, (x, y): (u16, u16)) {
+    display::push_rect_uniform(
+        Rect {
+            x: x * CELL_SIZE,
+            y: y * CELL_SIZE,
+            width: CELL_SIZE,
+            height: CELL_SIZE,
+        },
+        if board[x as usize][y as usize] {
+            Color::BLACK
+        } else {
+            Color::WHITE
+        },
+    );
 }
 
 #[no_mangle]
 fn _eadk_main() {
+    display::push_rect_uniform(Rect::SCREEN, Color::WHITE);
+
     let mut state: AppState = AppState::Editor;
     let mut pointer: (u16, u16) = (LINE_SIZE / 2, COLUMN_SIZE / 2);
 
@@ -121,43 +129,18 @@ fn _eadk_main() {
     loop {
         let keyboard_state = keyboard::scan();
 
-        draw_board(
-            &board
-                .iter()
-                .enumerate()
-                .flat_map(|(x, col)| {
-                    col.into_iter().enumerate().filter_map(move |(y, b)| {
-                        if *b {
-                            Some((x as u16, y as u16))
-                        } else {
-                            None
-                        }
-                    })
-                })
-                .collect(),
-        );
-
         if keyboard_state.key_down(key::XNT) {
             state = AppState::Editor;
         } else if keyboard_state.key_down(key::VAR) {
+            draw_cell(&board, pointer);
             state = AppState::Running;
         } else if keyboard_state.key_down(key::TOOLBOX) {
+            draw_cell(&board, pointer);
             state = AppState::StepByStep;
         }
 
         match state {
             AppState::Editor => {
-                // Draw the pointer
-                display::push_rect_uniform(
-                    Rect {
-                        x: pointer.0 * CELL_SIZE,
-                        y: pointer.1 * CELL_SIZE,
-                        width: CELL_SIZE,
-                        height: CELL_SIZE,
-                    },
-                    Color::RED,
-                );
-
                 let current = &mut board[pointer.0 as usize][pointer.1 as usize];
                 if keyboard_state.key_down(key::EXE) {
                     *current = !*current;
@@ -168,15 +151,29 @@ fn _eadk_main() {
                 }
 
                 if keyboard_state.key_down(key::UP) && pointer.1 > 0 {
+                    draw_cell(&board, pointer);
                     pointer.1 -= 1;
                 } else if keyboard_state.key_down(key::DOWN) && pointer.1 < COLUMN_SIZE - 1 {
+                    draw_cell(&board, pointer);
                     pointer.1 += 1;
                 }
                 if keyboard_state.key_down(key::LEFT) && pointer.0 > 0 {
+                    draw_cell(&board, pointer);
                     pointer.0 -= 1;
                 } else if keyboard_state.key_down(key::RIGHT) && pointer.0 < LINE_SIZE - 1 {
+                    draw_cell(&board, pointer);
                     pointer.0 += 1;
                 }
+
+                display::push_rect_uniform(
+                    Rect {
+                        x: pointer.0 * CELL_SIZE,
+                        y: pointer.1 * CELL_SIZE,
+                        width: CELL_SIZE,
+                        height: CELL_SIZE,
+                    },
+                    Color::RED,
+                );
 
                 timing::msleep(50);
             }
