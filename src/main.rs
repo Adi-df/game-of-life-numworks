@@ -78,7 +78,9 @@ fn run_cell(board: &Board<bool>, (x, y): (usize, usize)) -> Option<bool> {
 }
 
 fn run_once(board: &mut Board<bool>) {
+    // Store wich cells have been done
     let mut updated_board: Board<bool> = [[false; COLUMN_SIZE as usize]; LINE_SIZE as usize];
+    // Store cells to update
     let mut born: OnBoard<usize> = Vec::new();
     let mut died: OnBoard<usize> = Vec::new();
 
@@ -153,9 +155,13 @@ fn _eadk_main() {
                     Color::RED,
                 );
 
+                let current = &mut board[pointer.0 as usize][pointer.1 as usize];
                 if keyboard_state.key_down(key::EXE) {
-                    let current = &mut board[pointer.0 as usize][pointer.1 as usize];
                     *current = !*current;
+                } else if keyboard_state.key_down(key::PLUS) {
+                    *current = true;
+                } else if keyboard_state.key_down(key::MINUS) {
+                    *current = false;
                 }
 
                 if keyboard_state.key_down(key::UP) && pointer.1 > 0 {
@@ -168,18 +174,21 @@ fn _eadk_main() {
                 } else if keyboard_state.key_down(key::RIGHT) && pointer.0 < LINE_SIZE - 1 {
                     pointer.0 += 1;
                 }
+
+                timing::msleep(50);
             }
             AppState::Running => {
                 run_once(&mut board);
+                timing::msleep(10);
             }
             AppState::StepByStep => {
                 if keyboard_state.key_down(key::EXE) {
                     run_once(&mut board);
+                    timing::msleep(50);
                 }
             }
         }
 
         display::wait_for_vblank();
-        timing::msleep(100);
     }
 }

@@ -5,7 +5,4 @@ authors = ["NumWorks <contact@numworks.com>"]
 edition = "2018"
 
 [dependencies]
-
-
 heapless = "*"
-
