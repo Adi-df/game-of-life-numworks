@@ -13,10 +13,7 @@ jobs:
           toolchain: stable
           target: thumbv7em-none-eabihf
       - name: Install cargo-make
-        uses: actions-rs/cargo@v1
-        with:
-          command: install
-          args: cargo-make
+        uses: davidB/rust-cargo-make@v1
       - name: Install nwlink
         run: npm install -g nwlink
       - name: Run cargo make pack
