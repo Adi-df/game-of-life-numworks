@@ -23,7 +23,7 @@ const LINE_SIZE: u16 = SCREEN_WIDTH / CELL_SIZE;
 const COLUMN_SIZE: u16 = SCREEN_HEIGHT / CELL_SIZE;
 const BOARD_SIZE: usize = LINE_SIZE as usize * COLUMN_SIZE as usize;
 
-type Board = [bool; BOARD_SIZE];
+type Board = [[bool; COLUMN_SIZE as usize]; LINE_SIZE as usize];
 type OnBoard = Vec<(u16, u16), BOARD_SIZE>;
 
 enum AppState {
@@ -48,18 +48,49 @@ fn draw_board(on_board: &OnBoard) {
     });
 }
 
+fn run_once(board: &mut Board) {
+    let mut dead: OnBoard = Vec::new();
+    let mut born: OnBoard = Vec::new();
+
+    dead.into_iter()
+        .for_each(|(x, y)| board[x as usize][y as usize] = false);
+    born.into_iter()
+        .for_each(|(x, y)| board[x as usize][y as usize] = true);
+}
+
 #[no_mangle]
 fn _eadk_main() {
     let mut state: AppState = AppState::Editor;
     let mut pointer: (u16, u16) = (LINE_SIZE / 2, COLUMN_SIZE / 2);
 
-    let mut board: Board = [false; BOARD_SIZE];
-    let mut on_board: OnBoard = Vec::new();
+    let mut board: Board = [[false; COLUMN_SIZE as usize]; LINE_SIZE as usize];
 
     loop {
         let keyboard_state = keyboard::scan();
 
-        draw_board(&on_board);
+        draw_board(
+            &board
+                .iter()
+                .enumerate()
+                .flat_map(|(x, col)| {
+                    col.into_iter().enumerate().filter_map(move |(y, b)| {
+                        if *b {
+                            Some((x as u16, y as u16))
+                        } else {
+                            None
+                        }
+                    })
+                })
+                .collect(),
+        );
+
+        if keyboard_state.key_down(key::XNT) {
+            state = AppState::Editor;
+        } else if keyboard_state.key_down(key::VAR) {
+            state = AppState::Running;
+        } else if keyboard_state.key_down(key::TOOLBOX) {
+            state = AppState::StepByStep;
+        }
 
         match state {
             AppState::Editor => {
@@ -75,16 +106,7 @@ fn _eadk_main() {
                 );
 
                 if keyboard_state.key_down(key::EXE) {
-                    let current =
-                        &mut board[pointer.0 as usize + pointer.1 as usize * LINE_SIZE as usize];
-                    match current {
-                        false => {
-                            on_board.push(pointer).unwrap();
-                        }
-                        true => {
-                            on_board.retain(|p| *p != pointer);
-                        }
-                    }
+                    let current = &mut board[pointer.0 as usize][pointer.1 as usize];
                     *current = !*current;
                 }
 
