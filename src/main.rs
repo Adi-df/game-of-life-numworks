@@ -48,41 +48,25 @@ fn draw_board(on_board: &OnBoard<u16>) {
     });
 }
 
-fn run_cell(board: &Board, cell: (usize, usize)) -> Option<bool> {
-    let (x, y) = cell;
+fn get_cell(board: &Board, (x, y): (i16, i16)) -> u8 {
+    if x < 0 || y < 0 || x > LINE_SIZE as i16 - 1 || y > COLUMN_SIZE as i16 - 1 {
+        0
+    } else {
+        board[x as usize][y as usize] as u8
+    }
+}
 
-    let neighbor_count = {
-        let mut count = 0;
+fn run_cell(board: &Board, (x, y): (usize, usize)) -> Option<bool> {
+    let (ix, iy) = (x as i16, y as i16);
 
-        if x > 0 {
-            count += board[x - 1][y] as u16;
-        }
-        if x < LINE_SIZE as usize - 1 {
-            count += board[x + 1][y] as u16;
-        }
-
-        if y > 0 {
-            count += board[x][y - 1] as u16;
-        }
-        if y < COLUMN_SIZE as usize - 1 {
-            count += board[x][y + 1] as u16;
-        }
-
-        if x > 0 && y > 0 {
-            count += board[x - 1][y - 1] as u16;
-        }
-        if x < LINE_SIZE as usize - 1 && y > 0 {
-            count += board[x + 1][y - 1] as u16;
-        }
-        if x > 0 && y < COLUMN_SIZE as usize - 1 {
-            count += board[x - 1][y + 1] as u16;
-        }
-        if x < LINE_SIZE as usize - 1 && y < COLUMN_SIZE as usize - 1 {
-            count += board[x + 1][y + 1] as u16;
-        }
-
-        count
-    };
+    let neighbor_count = get_cell(&board, (ix - 1, iy - 1))
+        + get_cell(&board, (ix, iy - 1))
+        + get_cell(&board, (ix + 1, iy - 1))
+        + get_cell(&board, (ix - 1, iy))
+        + get_cell(&board, (ix + 1, iy))
+        + get_cell(&board, (ix - 1, iy + 1))
+        + get_cell(&board, (ix, iy + 1))
+        + get_cell(&board, (ix + 1, iy + 1));
 
     if neighbor_count == 3 && !board[x][y] {
         Some(true)
