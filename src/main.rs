@@ -82,13 +82,20 @@ fn run_once(board: &mut Board) {
     let mut born: OnBoard<usize> = Vec::new();
 
     board.iter().enumerate().for_each(|(x, col)| {
-        col.iter()
-            .enumerate()
-            .for_each(|(y, _)| match run_cell(&board, (x, y)) {
-                Some(true) => born.push((x, y)).unwrap(),
-                Some(false) => dead.push((x, y)).unwrap(),
-                _ => {}
-            });
+        col.iter().enumerate().for_each(|(y, _)| {
+            if board[x][y] {
+                for dx in -1..=1 {
+                    for dy in -1..=1 {
+                        let c = ((x as isize + dx) as usize, (y as isize + dy) as usize);
+                        match run_cell(&board, c) {
+                            Some(true) => born.push(c).unwrap(),
+                            Some(false) => dead.push(c).unwrap(),
+                            _ => {}
+                        }
+                    }
+                }
+            }
+        });
     });
 
     dead.into_iter().for_each(|(x, y)| board[x][y] = false);
