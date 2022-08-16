@@ -19,9 +19,9 @@ pub static EADK_APP_API_LEVEL: u32 = 0;
 pub static EADK_APP_ICON: [u8; 4250] = *include_bytes!("../target/icon.nwi");
 
 const CELL_SIZE: u16 = 4;
-const LINE_SIZE: usize = (SCREEN_WIDTH / CELL_SIZE) as usize;
-const COLUMN_SIZE: usize = (SCREEN_HEIGHT / CELL_SIZE) as usize;
-const BOARD_SIZE: usize = LINE_SIZE * COLUMN_SIZE;
+const LINE_SIZE: u16 = SCREEN_WIDTH / CELL_SIZE;
+const COLUMN_SIZE: u16 = SCREEN_HEIGHT / CELL_SIZE;
+const BOARD_SIZE: usize = LINE_SIZE as usize * COLUMN_SIZE as usize;
 
 type Board = [bool; BOARD_SIZE];
 type OnBoard = Vec<(u16, u16), BOARD_SIZE>;
@@ -51,7 +51,7 @@ fn draw_board(on_board: &OnBoard) {
 #[no_mangle]
 fn _eadk_main() {
     let mut state: AppState = AppState::Editor;
-    let mut pointer: (u16, u16) = (LINE_SIZE as u16 / 2, COLUMN_SIZE as u16 / 2);
+    let mut pointer: (u16, u16) = (LINE_SIZE / 2, COLUMN_SIZE / 2);
 
     let mut board: Board = [false; BOARD_SIZE];
     let mut on_board: OnBoard = Vec::new();
@@ -75,7 +75,8 @@ fn _eadk_main() {
                 );
 
                 if keyboard_state.key_down(key::EXE) {
-                    let current = &mut board[pointer.0 as usize + pointer.1 as usize * LINE_SIZE];
+                    let current =
+                        &mut board[pointer.0 as usize + pointer.1 as usize * LINE_SIZE as usize];
                     match current {
                         false => {
                             on_board.push(pointer).unwrap();
@@ -87,14 +88,14 @@ fn _eadk_main() {
                     *current = !*current;
                 }
 
-                if keyboard_state.key_down(key::UP) {
+                if keyboard_state.key_down(key::UP) && pointer.1 > 0 {
                     pointer.1 -= 1;
-                } else if keyboard_state.key_down(key::DOWN) {
+                } else if keyboard_state.key_down(key::DOWN) && pointer.1 < COLUMN_SIZE - 1 {
                     pointer.1 += 1;
                 }
-                if keyboard_state.key_down(key::LEFT) {
+                if keyboard_state.key_down(key::LEFT) && pointer.0 > 0 {
                     pointer.0 -= 1;
-                } else if keyboard_state.key_down(key::RIGHT) {
+                } else if keyboard_state.key_down(key::RIGHT) && pointer.0 < LINE_SIZE - 1 {
                     pointer.0 += 1;
                 }
             }
