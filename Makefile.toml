@@ -1,0 +1,16 @@
+[tasks.build]
+command = "cargo"
+args = ["build", "--release"]
+
+[tasks.run]
+command = "cargo"
+args = ["run", "--release"]
+
+[tasks.clean_pack]
+command = "rm"
+args = ["-f", "pack/*.nwa"]
+
+[tasks.pack]
+dependencies = ["build", "clean_pack"]
+command = "cp"
+args = ["target/thumbv7em-none-eabihf/release/${CARGO_MAKE_CRATE_NAME}", "pack/${CARGO_MAKE_CRATE_NAME}.nwa"]
