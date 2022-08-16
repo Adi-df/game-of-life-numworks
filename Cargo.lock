@@ -100,7 +100,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "epsilon-sample-app"
+name = "game-of-life-numworks"
 version = "0.1.0"
 dependencies = [
  "heapless",
