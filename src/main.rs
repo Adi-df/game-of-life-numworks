@@ -49,7 +49,48 @@ fn draw_board(on_board: &OnBoard<u16>) {
 }
 
 fn run_cell(board: &Board, cell: (usize, usize)) -> Option<bool> {
-    todo!();
+    let (x, y) = cell;
+
+    let neighbor_count = {
+        let mut count = 0;
+
+        if x > 0 {
+            count += board[x - 1][y] as u16;
+        }
+        if x < LINE_SIZE as usize - 1 {
+            count += board[x + 1][y] as u16;
+        }
+
+        if y > 0 {
+            count += board[x][y - 1] as u16;
+        }
+        if y < COLUMN_SIZE as usize - 1 {
+            count += board[x][y + 1] as u16;
+        }
+
+        if x > 0 && y > 0 {
+            count += board[x - 1][y - 1] as u16;
+        }
+        if x < LINE_SIZE as usize - 1 && y > 0 {
+            count += board[x + 1][y - 1] as u16;
+        }
+        if x > 0 && y < COLUMN_SIZE as usize - 1 {
+            count += board[x - 1][y + 1] as u16;
+        }
+        if x < LINE_SIZE as usize - 1 && y < COLUMN_SIZE as usize - 1 {
+            count += board[x + 1][y + 1] as u16;
+        }
+
+        count
+    };
+
+    if neighbor_count == 3 && !board[x][y] {
+        Some(true)
+    } else if neighbor_count != 2 && neighbor_count != 3 && board[x][y] {
+        Some(false)
+    } else {
+        None
+    }
 }
 
 fn run_once(board: &mut Board) {
@@ -134,7 +175,11 @@ fn _eadk_main() {
                 }
             }
             AppState::Running => {}
-            AppState::StepByStep => {}
+            AppState::StepByStep => {
+                if keyboard_state.key_down(key::EXE) {
+                    run_once(&mut board);
+                }
+            }
         }
 
         display::wait_for_vblank();
