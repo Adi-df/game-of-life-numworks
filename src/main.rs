@@ -16,7 +16,7 @@ pub static EADK_APP_API_LEVEL: u32 = 0;
 
 #[export_name = "eadk_app_icon"]
 #[link_section = ".rodata.eadk_app_icon"]
-pub static EADK_APP_ICON: [u8; 4250] = *include_bytes!("../target/icon.nwi");
+pub static EADK_APP_ICON: [u8; 2868] = *include_bytes!("../target/icon.nwi");
 
 const CELL_SIZE: u16 = 4;
 const LINE_SIZE: u16 = SCREEN_WIDTH / CELL_SIZE;
