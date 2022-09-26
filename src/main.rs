@@ -1,20 +1,20 @@
-#![no_std]
 #![no_main]
+#![no_std]
 
 pub mod eadk;
 use eadk::{display, key, keyboard, timing, Color, Rect, SCREEN_HEIGHT, SCREEN_WIDTH};
 
 use heapless::Vec;
 
-#[export_name = "eadk_app_name"]
+#[used]
 #[link_section = ".rodata.eadk_app_name"]
 pub static EADK_APP_NAME: [u8; 10] = *b"GameOLife\0";
 
-#[export_name = "eadk_app_api_level"]
-#[link_section = ".rodata.eadk_app_api_level"]
+#[used]
+#[link_section = ".rodata.eadk_api_level"]
 pub static EADK_APP_API_LEVEL: u32 = 0;
 
-#[export_name = "eadk_app_icon"]
+#[used]
 #[link_section = ".rodata.eadk_app_icon"]
 pub static EADK_APP_ICON: [u8; 2868] = *include_bytes!("../target/icon.nwi");
 
@@ -118,7 +118,7 @@ fn draw_cell(board: &Board<bool>, (x, y): (u16, u16)) {
 }
 
 #[no_mangle]
-fn _eadk_main() {
+pub fn main() {
     display::push_rect_uniform(Rect::SCREEN, Color::WHITE);
 
     let mut state: AppState = AppState::Editor;
